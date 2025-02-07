@@ -3,7 +3,7 @@
 # https://github.com/sakshimohta17/hackbio-biocoding-internship/blob/main/stage-0/Task1 : sakshi accounts
 # https://www.linkedin.com/in/sakshimohta1705 : Sakshi
 
-# https://github.com/AngeMaxime/HackBio-Biocoding-Internship- : Ange accounts
+# https://github.com/AngeMaxime/HackBio-Biocoding-Internship-: Ange accounts
 # https://www.linkedin.com/in/%F0%9F%A7%ACtchoutang-ange-maxime-834b6729a
 
 # https://github.com/maero1 : Maero Olori Accounts
