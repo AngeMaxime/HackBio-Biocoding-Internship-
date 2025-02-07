@@ -1,0 +1,40 @@
+HackBio Internship - Leucine Group
+
+Internship Overview
+We began our HackBio internship on February 2, 2025. This program focuses on equipping biologists, especially bioinformaticians, with essential programming skills in R and Python.
+
+The internship is structured into four stages, and we are currently completing Stage 0. In this stage, we are learning:
+
+- Introduction to Python and R
+- Data Types
+- Data Structures
+
+Stage 0 Assignment
+As part of our learning, our instructors assigned us a task to create a data structure using either R or Python to represent our team. The data structure must include:
+
+1- Names
+2- Slack Username
+3- Email
+4- Country
+5- Hobby
+6- Discipline
+7- Preferred Programming Language
+
+Our Solution
+We chose Python for this task, and implemented our solution using a dictionary (First python script) which is a collection of key-value pairs and a list (The second Python script). Each team member’s details are stored as a dictionary entry under their respective Member ID (e.g., Member_1, Member_2, etc.).
+
+Code Implementation
+Our Python script contains:
+
+- A dictionary named Group_description, storing information about all team members.
+- Commands to print individual member details.
+- A final command to display all members' information in a single print statement.
+
+Team Members
+
+- TCHOUTANG Ange Maxime (Cameroon) - Preferred Language: R
+- OLORI Oghenemaero Oghale (Nigeria) - Preferred Language: Python
+- ABDULRAHMAN Olamilekan Raji (Nigeria) - Preferred Language: Python
+- SAKSHI Mohta (India) - Preferred Language: Python
+
+This project marks our first step in the HackBio internship, and we look forward to learning and growing in the upcoming stages.
