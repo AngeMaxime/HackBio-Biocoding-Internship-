@@ -21,7 +21,7 @@ As part of our learning, our instructors assigned us a task to create a data str
 7- Preferred Programming Language
 
 Our Solution
-We chose Python for this task, and implemented our solution using a dictionary (First python script) which is a collection of key-value pairs and a list (The second Python script). Each team member’s details are stored as a dictionary entry under their respective Member ID (e.g., Member_1, Member_2, etc.).
+We chose Python for this task, and implemented our solution using a nested-list (Python script) and present also another solution using a dictionary (First python script) which is a collection of key-value pairs and. Each team member’s details are stored as a dictionary entry under their respective Member ID (e.g., Member_1, Member_2, etc.).
 
 Code Implementation
 Our Python script contains:
