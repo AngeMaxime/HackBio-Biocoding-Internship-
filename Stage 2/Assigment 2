@@ -1,1 +1,1065 @@
+# https://github.com/sakshimohta17/hackbio-biocoding-internship/blob/main/stage-0/Task1 : sakshi accounts
+# https://www.linkedin.com/in/sakshimohta1705 : Sakshi
 
+# https://github.com/AngeMaxime/HackBio-Biocoding-Internship- : Ange accounts
+# https://www.linkedin.com/in/%F0%9F%A7%ACtchoutang-ange-maxime-834b6729a
+
+# https://github.com/maero1 : Maero Olori Accounts
+# https://www.linkedin.com/in/maeroolori/
+
+# https://github.com/RajiAbdulrahaman
+# https://www.linkedin.com/authwall: Raji Accounts
+
+# https://github.com/Gooddy07 : Umunakwe Accounts
+# https://www.linkedin.com/in/goodness-umunakwe
+
+# Task 2.1 
+
+# Look at the dataset
+
+# Plot all the growth curves of OD600 vs Time for the different Strains with the following instructions: For each strain, plot a growth curve of the the knock out (-) an knock in (+) strain overlaid on top of each other
+# Using your function from last stage, determine the time to reach the carrying capacity for each strain/mutant
+# Generate a scatter plot of the time it takes to reach carrying capacity for the knock out and the knock in strains
+# Generate a box plot of the time it takes to reach carrying capacity for the knock out and the knock in strains
+# Is there a statistical difference in the time it takes the knock out strains to reach their maximum carrying capacity compared to the knock in strains?
+# What do you see? Explain your observations as comments in your code
+
+
+# Solution:
+
+#Step 1: Let's start by loading the dataset. 
+
+# Since the data is in TSV (tab-separated values) format, we can use pandas to read it
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the dataset directly from the TSV link
+url = "https://raw.githubusercontent.com/HackBio-Internship/2025_project_collection/refs/heads/main/Python/Dataset/mcgc.tsv"
+df = pd.read_csv(url, sep="\t")
+
+# Define the mapping of well positions to strain and type (WT or MUT)
+well_to_strain_type = {
+    "A1": ("Strain1", "WT"), "A2": ("Strain1", "MUT"),
+    "A3": ("Strain1", "WT"), "A4": ("Strain1", "MUT"),
+    "A5": ("Strain2", "WT"), "A6": ("Strain2", "MUT"),
+    "A7": ("Strain2", "WT"), "A8": ("Strain2", "MUT"),
+    "A9": ("Strain3", "WT"), "A10": ("Strain3", "MUT"),
+    "A11": ("Strain3", "WT"), "A12": ("Strain3", "MUT"),
+    "B1": ("Strain1", "WT"), "B2": ("Strain1", "MUT"),
+    "B3": ("Strain1", "WT"), "B4": ("Strain1", "MUT"),
+    "B5": ("Strain2", "WT"), "B6": ("Strain2", "MUT"),
+    "B7": ("Strain2", "WT"), "B8": ("Strain2", "MUT"),
+    "B9": ("Strain3", "WT"), "B10": ("Strain3", "MUT"),
+    "B11": ("Strain3", "WT"), "B12": ("Strain3", "MUT"),
+    "C1": ("Strain1", "WT"), "C2": ("Strain1", "MUT"),
+    "C3": ("Strain1", "WT"), "C4": ("Strain1", "MUT"),
+    "C5": ("Strain2", "WT"), "C6": ("Strain2", "MUT"),
+    "C7": ("Strain2", "WT"), "C8": ("Strain2", "MUT"),
+    "C9": ("Strain3", "WT"), "C10": ("Strain3", "MUT"),
+    "C11": ("Strain3", "WT"), "C12": ("Strain3", "MUT")
+}
+
+# Display the first few rows to understand its structure
+print(df.head())
+
+# Display the column names
+print(df.columns)
+
+# Set up the figure for the plots (3 main graphs for each strain)
+fig, axes = plt.subplots(3, 3, figsize=(15, 12))
+
+# Plate labels (A, B, C)
+plates = ['A', 'B', 'C']
+
+# Get strain names
+strains = ['Strain1', 'Strain2', 'Strain3']
+
+# Iterate over each strain and its corresponding axes (for plates A, B, and C)
+for i, strain in enumerate(strains):
+    for j, plate in enumerate(plates):
+        # Get the well positions for this strain and plate
+        wells = [f"{plate}{k}" for k in range(1, 13) if well_to_strain_type[f"{plate}{k}"][0] == strain]
+        
+        # Set the current axis
+        ax = axes[i, j]
+        
+        # Iterate over each well in the current plate and plot the growth curves
+        for well in wells:
+            # Get strain and type (WT or MUT) for the current well position
+            strain_name, strain_type = well_to_strain_type[well]
+            
+            # Filter data for the current well position (strain/condition)
+            well_data = df[['time', well]]
+            
+            # Plot the growth curve for the current well position
+            ax.plot(well_data['time'], well_data[well], label=f'{strain_name} - {strain_type} ({well})', marker='o')
+        
+        # Set labels and title for each subplot
+        ax.set_xlabel('Time (hours)')
+        ax.set_ylabel('OD600')
+        ax.set_title(f'{strain} - Plate {plate}')
+        ax.legend(title='Well Positions')
+
+# Adjust the layout to make it more readable
+plt.tight_layout()
+
+# Display the plot
+plt.show()
+
+# Step3: Using your function from last stage, determine the time to reach the carrying capacity for each strain/mutant
+
+import pandas as pd
+
+def logistic_growth(time, K=1000, P0=10, t_lag=10, r=0.2):
+    """
+    Simulates logistic population growth with a fixed lag phase and exponential phase.
+
+    Parameters:
+        time (list): Time points (integers).
+        K (int): Carrying capacity (maximum population).
+        P0 (int): Initial population.
+        t_lag (int): Fixed lag phase duration (default: 10).
+        r (float): Fixed growth rate (default: 0.2).
+
+    Returns:
+        population (list): Population size at each time step.
+    """
+    population = []
+    for t in time:
+        if t < t_lag:
+            pop = P0  # Population stays constant during the lag phase
+        else:
+            pop = K / (1 + ((K - P0) / P0) * (2.718 ** (-r * (t - t_lag))))  # Logistic equation
+        population.append(pop)
+    
+    return population
+
+# Define time points
+time_points = list(range(1440))  # Time from 0 to 1440
+
+# Define different strains/mutants with varying growth rates or carrying capacities
+strains = {
+    "Strain1_WT": {"K": 1000, "r": 0.2},
+    "Strain1_MUT": {"K": 900, "r": 0.25},
+    "Strain2_WT": {"K": 1100, "r": 0.18},
+    "Strain2_MUT": {"K": 950, "r": 0.22},
+    "Strain3_WT": {"K": 1050, "r": 0.19},
+    "Strain3_MUT": {"K": 920, "r": 0.24},
+}
+
+# Store time to reach carrying capacity
+time_to_capacity = {}
+
+for strain, params in strains.items():
+    # Generate growth curve
+    growth_curve = logistic_growth(time_points, K=params["K"], r=params["r"])
+
+    # Determine the first time point where population reaches 99% of carrying capacity
+    threshold = 0.99 * params["K"]
+    t_reach = next((t for t, pop in zip(time_points, growth_curve) if pop >= threshold), None)
+
+    # Store results
+    time_to_capacity[strain] = t_reach
+
+# Print results
+print("Time to reach 99% of carrying capacity for each strain/mutant:")
+for strain, t in time_to_capacity.items():
+    print(f"{strain}: {t} hours")
+
+#  This tells us Strain1_MUT reaches carrying capacity faster (56 Hours) 
+# than Strain1_WT (47 hours) due to its higher growth rate.
+
+# Step4: Generate a scatter plot of the time it takes to reach carrying capacity for the knock out and the knock in strains
+
+import matplotlib.pyplot as plt
+
+# Separate WT and MUT times
+wt_times = [time_to_capacity[strain] for strain in strains if "WT" in strain]
+mut_times = [time_to_capacity[strain] for strain in strains if "MUT" in strain]
+labels = [strain.split("_")[0] for strain in strains if "WT" in strain]  # Extract strain names
+
+# Plot scatter plot
+plt.figure(figsize=(8, 6))
+plt.scatter(labels, wt_times, color='blue', label='Knock-In (WT)', marker='o', s=100)
+plt.scatter(labels, mut_times, color='red', label='Knock-Out (MUT)', marker='x', s=100)
+
+# Labels and title
+plt.xlabel("Strain")
+plt.ylabel("Time to Reach 99% Carrying Capacity (minutes)")
+plt.title("Comparison of Knock-In (WT) vs Knock-Out (MUT) Strains")
+plt.legend()
+plt.xticks(rotation=45)
+
+# Show plot
+plt.show()
+
+# Step7: Generate a box plot of the time it takes to reach carrying capacity for the knock out and the knock in strains
+
+# Collect the time data for WT and MUT strains
+wt_times = [time_to_capacity[strain] for strain in strains if "WT" in strain]
+mut_times = [time_to_capacity[strain] for strain in strains if "MUT" in strain]
+
+# Create the box plot
+plt.figure(figsize=(8, 6))
+
+# Plot the box plot for WT and MUT times
+plt.boxplot([wt_times, mut_times], labels=['Knock-In (WT)', 'Knock-Out (MUT)'], patch_artist=True, 
+            boxprops=dict(facecolor='skyblue', color='blue'),
+            whiskerprops=dict(color='blue'),
+            flierprops=dict(markerfacecolor='red', marker='o', markersize=8))
+
+# Set labels and title
+plt.xlabel('Strain Type')
+plt.ylabel('Time to Reach 99% Carrying Capacity (minutes)')
+plt.title('Box Plot of Time to Reach 99% Carrying Capacity for WT and MUT Strains')
+
+# Display the plot
+plt.show()
+
+# Step 6 : Is there a statistical difference in the time it takes the knock out strains to reach their maximum carrying capacity compared to the knock in strains?
+
+import scipy.stats as stats
+
+# Collect time data for WT and MUT strains
+wt_times = [time_to_capacity[f"Strain{i}_WT"] for i in range(1, 4)]
+mut_times = [time_to_capacity[f"Strain{i}_MUT"] for i in range(1, 4)]
+
+# 1. Check normality using Shapiro-Wilk test
+wt_normality = stats.shapiro(wt_times)
+mut_normality = stats.shapiro(mut_times)
+
+print("Shapiro-Wilk Test for Normality:")
+print(f"WT strains: p-value = {wt_normality.pvalue}")
+print(f"MUT strains: p-value = {mut_normality.pvalue}")
+
+# 2. Perform statistical test based on normality
+if wt_normality.pvalue > 0.05 and mut_normality.pvalue > 0.05:
+    # If both distributions are normal, use t-test
+    stat, p_value = stats.ttest_ind(wt_times, mut_times, equal_var=False)
+    test_type = "T-test"
+else:
+    # If data is not normal, use Mann-Whitney U test
+    stat, p_value = stats.mannwhitneyu(wt_times, mut_times, alternative='two-sided')
+    test_type = "Mann-Whitney U test"
+
+# 3. Print results
+print(f"\n{test_type} Results:")
+print(f"Statistic = {stat}, p-value = {p_value}")
+
+# Interpretation
+if p_value < 0.05:
+    print("There is a **significant difference** between WT and MUT strains.")
+else:
+    print("There is **no significant difference** between WT and MUT strains.")
+
+# ---- Observations ----
+# 1. If the p-value from the statistical test is **less than 0.05**, it indicates that the WT and MUT strains
+#    reach their carrying capacity at **significantly different times**.
+# 2. If the p-value is **greater than 0.05**, it suggests that there is **no strong statistical evidence**
+#    to claim a difference in the time to carrying capacity between WT and MUT strains.
+# 3. The normality test (Shapiro-Wilk) helps determine whether we should use a **t-test** (for normally distributed data)
+#    or the **Mann-Whitney U test** (for non-normally distributed data).
+# 4. In some cases, the knock-out (MUT) strains might reach carrying capacity **faster or slower** than knock-in (WT) strains
+#    depending on the mutation’s effect on the growth rate (r) or carrying capacity (K).
+# 5. If there is **no significant difference**, it could indicate that the mutation **does not significantly affect**
+#    the time to reach carrying capacity.
+# 6. If there is a **clear difference**, further analysis could explore whether **growth rates (r) or carrying capacities (K)**
+#    are responsible for the observed changes.
+
+
+# Task 3: Botany and Plant Science**
+
+# Have a look at this dataset
+
+# Some scientists are trying to engineer mutants for a crop to become resistant to a pesticide. They compared the metabolic response of the engineered mutants to the metabolic response of the wild type plants. The took readings after 8 and 24 hours
+
+# Your task
+
+# Calculate the difference in metabolic response (ΔM) between the DMSO treatment from the 24 hours treatment for the wild type and mutants
+
+# Generate a scatter plot showing the difference for ΔM for WT and Mutants
+
+# Fit a line that satifies a y-intercept of 0 and a slope of 1.
+
+# Using a residual cut off of your choice (calculated a the difference between the fitted line and each point) calculate the residual of each point on the scatter plot
+
+# Color metabolites that fall within +/- n of your residual grey. For example, if you have a cut-off of 0.3, color residual values that are within -0.3 and +0.3 grey
+
+# Color metabolites that fall outside this range salmon.
+
+# What are these metabolites. How do you explain the trends you see on either direction of the plot?
+
+# Pick any 6 metabolites that fall outside this range and generate a line plot that spans from their 0h treatment to their 8h and 24hr.
+
+# What can you say about the plots you see?
+
+# Solution:
+
+# Load necessary packages for this analysis:
+
+import pandas as pd # For data manipulation (reading CSV, creating DataFrames)
+import numpy as np # For numerical operations (creating range for reference line)
+import matplotlib.pyplot as plt #  Core plotting library (creates figures, axes)
+import seaborn as sns # Enhances matplotlib with better styling and easier plotting functions
+from sklearn.linear_model import LinearRegression
+
+# URLs for dataset and data dictionary
+dataset_url = "https://raw.githubusercontent.com/HackBio-Internship/2025_project_collection/refs/heads/main/Python/Dataset/Pesticide_treatment_data.txt"
+
+# Load dataset and data dictionary
+df = pd.read_csv(dataset_url)
+
+# Display first few rows
+print("Dataset Sample:")
+print(df.head())
+
+# Check column names in both files
+print("\nDataset Columns:", df.columns.tolist())
+
+# Display basic information about the dataset
+print(df.info())
+
+# Save locally if needed
+df.to_csv("data.csv", index=False)
+
+# The first step was to load and inspect the files.
+# Now, let's merge the data dictionary into the dataset by adding descriptions to the columns.
+
+
+# Step1b: Present the data properly
+
+# Existing data
+data2 = { 
+
+"metabolites": [ 'acetylcarnitine', 'aconitic_acid', 'adenine', 'adenosine_cyclic_monophosphate', 'adenosine_monophosphate',
+    'adenosine_triphosphate', 'adipic_acid', 'allantoin', 'alpha_ketoglutaric_acid', 'aminoadipic_acid',
+    'arabitol', 'arginine', 'argininosuccinic_acid', 'asparagine', 'aspartic_acid', 'butyrylcarnitine', 'carnitine',
+    'citramalic_acid', 'citric_acid_isocitric_acid', 'citrulline', 'creatine', 'creatine_phosphate', 'creatinine',
+    'cystathionine', 'cystine', 'cytidine_triphosphate', 'deoxy_methylthio_adenosine', 'deoxyadenosine_triphosphate',
+    'deoxycytidine_monophosphate', 'deoxythymidine_triphosphate', 'deoxyuridine', 'dihydroxyacetone_phosphate',
+    'dihydroxyisovalerate', 'flavin_adenine_dinucleotide', 'folic_acid', 'fructose_1_6_biphosphate', 'gamma_glu_cys',
+    'glutamic_acid', 'glutamine', 'gluthathione_oxidized', 'glyceric_acid', 'glycine', 'guanosine', 'guanosine_triphosphate',
+    'hexose', 'hexose_1_phosphate', 'hexose_6_phosphate', 'histidine', 'homocitrate', 'homoserine', 'hydroxy_glutamic_acid',
+    'hydroxyglutaric_acid', 'hypoxanthine', 'inosine_monophosphate', 'inosine_triphosphate', 'isoleucine', 'itaconic_acid',
+    'ketobutyrate', 'ketovaleric_acid', 'lactic_acid', 'leucine', 'maleic_acid', 'malic_acid', 'methionine', 'myristoylcarnitine',
+    'n_acetylglutamic_acid', 'n_acetylneuraminic_acid', 'n_carbamoyl_aspartic_acid', 'n_carbamyl_glutamic_acid',
+    'nicotinamide_adenine_dinucleotide', 'o_phosphorylethanolamine', 'orotic_acid', 'oxamic_acid', 'pantothenic_acid',
+    'pentahydroxyhexanoic_acid', 'pentose', 'phenolred', 'phenylalanine', 'phenylpyruvic_acid', 'phospho_serine',
+    'phosphoenolpyruvic_acid', 'pyridoxal_5_phosphate', 'pyridoxal_hydrochloride', 'pyridoxic_acid', 'pyridoxine',
+    'pyruvic_acid', 'riboflavin', 'ribose_5_phosphate', 'salicylic_acid', 'serine', 'succinic_acid', 'taurine',
+    'taurocholic_acid', 'thiamine', 'threonine', 'tryptophan', 'tyrosine', 'uracil', 'uric_acid', 'uridine',
+    'uridine_diphosphohexose', 'uridine_monophosphate', 'uridine_triphosphate', 'valine', 'xanthine', 'xanthosine', 'xylitol',
+    'xylulose_5_phosphate'],
+    "WT_DMSO_1" : [7, -19.44763901, -0.066412547, -1.917890056, 2.967938969, 12.72884233, 1.165878343, 7.15182243, 3.897284416, 6.566451308, 3.130300677, 10.78788322, 4.529372936, 8.035990108, 12.48780933, 6.450711344, 8.292781335, 2.169572829, 2.775293891, 4.40638839, 12.14212667, 10.9923372, 6.50271102, 9.803747897, 8.805362844, 7.723140751, 0.404038076, 6.573614568, 2.310092091, 6.156367823, 0.066342663, 9.437772289, -0.713531531, 4.766782393, 2.320099265, 7.962358966, 7.788643546, 14.89545443, 15.07049174, 8.246361097, 2.230973374, 13.26447567, 0.5, 8.84362509, 15.51407273, 4.69361598, 8.027299339, 10.07357022, -0.982020371, 6.586799463, 2.474427411, 2.889464911, 5.410297076, 3.276224457, 7.366707808, 11.89033973, 8.858149592, 7.759829632, 8.054340617, 12.7642196, 11.65589608, 14.17273754, 6.789769215, 10.2231342, 5.293257655, 1.624637221, 4.84568322, 3.861186958, -1.441451999, 9.129678488, 6.627829959, -1.3, 0.173257868, 8.593991528, 6.685575078, 14.15627146, 6.665274537, 11.27521346, -2.049134593, 13.43884153, 4.275367495, 2.860044228, 0.667072484, -1.156049774, 5.580222077, 7.178996987, 1.651305172, 6.171646829, 2.935758563, 12.24448764, 6.684445766, 12.75327844, 0.258987743, 10.15638237, 12.98369016, 8.636990755, 11.17042296, 3.097706844, 2.57535632, 3.013875253, 9.541006915, 4.607715907, 9.069960973, 12.14046943, 3.880476129, -0.917890032, 5.148667208, 7.900344807],
+    "WT_pesticide_0_1" : [7.035531296, -19.44595112, -0.363286104, -1.7, 5.340498174, 12.71899488, 1.136284912, 6.941596248, 4.398952736, 6.442068634, 3.019524242, 10.15008417, 4.174267045, 7.736832447, 12.28749873, 7.747669644, 8.318739831, 2.040827754, 2.359933491, 0.801100719, 12.2276316, 12.19284416, 6.534455064, 8.509149975, 7.721888715, 7.907291177, 0.378645747, 5.869506965, 2.820392061, 5.548983838, 0.801100719, 10.53631825, -0.935864885, 4.978405255, 1.553519967, 8.897755068, 7.558759975, 14.7415908, 14.44860672, 8.531061284, 2.25446634, 12.95768705, 0.649097625, 8.83337962, 15.26297168, 4.647555465, 8.072851041, 9.840757961, -0.33862405, 6.3, 2.540284142, 2.652177022, 5.428438176, 3.323697342, 6.806293393, 12.01936122, 8.542930671, 7.7, 7.367330439, 12.97279958, 11.50227387, 14.32873937, 6.891009502, 9.824471245, 6, 1.162437199, 4.782250822, 4.120807578, -1.520827393, 9.317012796, 6.180412436, -1.413912188, 2.897673982, 8.552387273, 6.787511659, 13.7756794, 6.395511464, 11.018117, -1.973339606, 13.46750228, 4.719046507, 2.905437382, 0.50665336, -2.520827415, 5.087640714, 7.328397268, 0.533620407, 6.409000035, 3.145055124, 11.80579657, 6.392061965, 12.72851973, 0.2216764, 10.05225536, 12.61078848, 7.814562983, 10.70577008, 2.781547925, 2.563367755, 2.825856821, 9.418045353, 6.860881952, 9.00186732, 11.84980241, 3.716842236, -0.761835484, 5.937027014, 8.53565403],
+    "WT_pesticide_8h_1": [6.773425473, -19.44319381, 0.048874947, -1.632302869, 3.705703434, 12.70598927, 0.689625226, 6.647827912, 4.152670359, 6.396936751, 3.208420803, 10.41797974, 4.168820099, 7.894230097, 12.30586034, 7.384601454, 7.762455475, 1.684641818, 2.241035167, 2.697068209, 12.17639784, 11.36590455, 6.920432469, 8.560457587, 6.620036309, 7.802181571, 0.223961654, 6.492531501, 2.41960922, 6.585863664, 1.056610596, 9.984309347, -2.097966441, 4.703241496, 1.944344363, 8.282288458, 7.497513065, 14.73629473, 14.44468401, 8.722554459, 1.813496884, 12.75355024, -1.280830498, 8.931945194, 15.09696122, 4.933882425, 8.207443918, 9.695598163, -1.204881645, 5.984436082, 2.398459385, 2.49270971, 5.228249012, 3.271267368, 7.377091412, 11.93158784, 8.622644278, 7.672264818, 7.906521575, 12.44227982, 11.10133344, 12.92554041, 6.760162606, 9.700061694, 6.301286048, 1.694591479, 4.818055166, 3.590533663, -1.905321363, 9.205352249, 7.746178857, -1.632302869, 2.217075268, 8.599663099, 6.663268167, 13.74096896, 6.190075659, 10.87581633, -1.966721908, 14.53360244, 4.892340162, 3.083363323, 0.079571744, -2.168355769, 4.93702898, 7.393982068, 0.554110255, 5.591865177, 2.70200895, 11.66882864, 6.257699276, 12.60987797, 0.033278092, 9.887824681, 12.47264884, 7.581010889, 10.78594961, 2.824865698, 2.153572326, 1.956799362, 9.459292104, 5.339438871, 9.083392906, 11.5804241, 3.790486906, -0.87557402, 6.490034254, 7.902033558],
+    "WT_pesticide_24h_1": [7.900711154, -19.44201458, 0.19558047, -2.173653327, 3.278473476, 12.79676716, 0.575284895, 7.125809097, 4.161240644, 6.336561374, 2.479788896, 9.894826395, 3.988458204, 7.249812779, 12.23886873, 7.814479026, 8.161612936, 1.226277266, 2.124027207, 3, 12.29125752, 11.05323545, 6.86830995, 8.477049396, 5.902271427, 7.818655614, 0.256334501, 6.866636378, 2.140237434, 6.440852023, -0.0767918, 9.922036702, -1.820016376, 4.870740777, 1.733237254, 8.309210622, 7.457725842, 14.64899563, 14.23228954, 8.539733172, 1.470202848, 12.6212927, -0.699722149, 8.973586921, 15.04589703, 4.947592355, 7.948815191, 9.618526889, -0.758615838, 6.108405433, 2.346419628, 2.539064706, 5.194610588, 3.291232706, 7.388589081, 11.86179492, 8.696582926, 7.921670415, 8.288223956, 12.0642288, 10.89618798, 13.05097646, 6.916312006, 9.642908144, 6.590112311, 1.780542969, 4.860381359, 3.696711377, -1.884146713, 9.286091327, 7.243378693, -1.699722143, -0.003728338, 8.406081617, 6.886141749, 13.7355379, 6.196549694, 10.74799134, -2, 14.32050604, 4.79980487, 2.969304611, 0.342922186, -2.256115486, 5.070578335, 7.108147924, 0.923208198, 5.383916725, 2.717117588, 11.6933733, 5.873470569, 12.84010065, 0.115853278, 9.681647749, 12.41239476, 7.663536547, 10.73305983, 2.447584545, 1.923208197, 1.300277847, 9.340211302, 4.781189192, 8.996236871, 11.54620484, 3.424605981, -1.058176118, 5.526786375, 7.836253012],
+    "mutant_DMSO_1": [6.49898734, -19.44282046, 0.761424368, -3.291686957, 5.19775963, 12.56360493, 0.219274952, 6.917888241, 4.353611195, 6.238329134, 1.72623494, 10.16724505, 4.110045881, 8.115102651, 11.74682055, 7.166309438, 7.519446854, 1.57126028, 2.177547825, 3.631937643, 11.98436108, 10.93492843, 6.746134497, 9.849925274, 6.953152532, 7.692660279, 0.50532601, 5.651413879, 2.397612192, 5.906021189, 0.829328433, 9.969379531, -2.221297635, 4.627176269, 1.31119744, 8.673953039, 7.135311528, 14.77150006, 14.59675604, 9.557307551, 1.730680845, 12.78820818, 0.681005686, 8.696926717, 15.0883039, 4.957663555, 8.161171996, 9.586172287, -1.059026209, 6.355591559, 2.299274273, 2.389199952, 4.989547616, 3.154569261, 7.2327568, 11.80810463, 7.835082024, 7.666648239, 6.956359182, 12.33267157, 11.42875504, 14.5761148, 6.497031364, 9.879223913, 5.539620275, 2.685592955, 4.928933199, 4.027533534, -2.526152215, 9.238670595, 6.773459856, -1.659418749, 3.546256273, 8.322930864, 6.874601669, 13.74827625, 6.169383145, 10.90429264, -1.806260137, 14.27734532, 4.03653915, 3.534861519, 0.515667954, -2.221297635, 5.213727641, 7.456505881, 0.72623494, 5.360799526, 3.317122274, 11.95482726, 5.890707385, 12.42133969, -0.090053106, 9.816020514, 12.7340582, 8.099610331, 10.98162785, 2.463200534, 1.997409734, 2.141272439, 9.261630331, 6.447418538, 8.854404336, 11.77530615, 3.461864086, -1.121761965, 5.464535744, 7.695150568],
+    "mutant_pesticide_0_1": [6.920948748, -19.44277129, -1.394873981, -3.434402334, 6.130593917, 12.28696093, 0.524955668, 7.393204997, 4.179489409, 6.180103017, 1.296539458, 10.56841267, 3.705149004, 7.701734339, 11.74167988, 7.290111504, 8.409562309, 1.708555605, 2.445521199, 3.798684673, 12.0340131, 11.16316529, 6.942084845, 9.777401468, 6.757205263, 7.502153802, 0.349868961, 5, 2.667135678, 6, 0.753224655, 10.32920195, -0.746346353, 4.61484117, 1.93870447, 9.224181068, 6.954452079, 14.60206583, 14.48474484, 8.704047235, 1.753224655, 12.72840855, 1.314535888, 8.410564892, 15.2769614, 4.656004168, 8.045770753, 9.85252435, -0.697436752, 6.905200257, 2.215851612, 2.568100159, 5.124443499, 3.069864918, 6.251319816, 11.83630665, 9.031730774, 7.7, 6.297670835, 12.94607187, 11.22660249, 13.89766237, 6.477988044, 9.840428739, 6.136928947, 2.715344771, 4.710255894, 4.007619592, -1.903887627, 9.04318729, 6.332310589, -1.69743675, 3.6, 8.289685113, 6.75184948, 13.85644049, 6.347685815, 10.90136792, -2.282399249, 13.24769307, 4.142186971, 2.94256711, 0.253653646, -3.019364838, 5.287456353, 7.286316933, 0.614841171, 5.597796474, 2.798684674, 11.8579832, 6.303689911, 12.36383598, -0.096532709, 9.958734825, 12.57960843, 7.806786365, 10.97788815, 2.901484204, 2.735522653, 2.832384192, 9.258552115, 7.399629698, 8.520843929, 11.64124392, 3.689144299, -1.356399833, 5.302187495, 7.703158098],
+    "mutant_pesticide_8h_1": [6, -19.44758055, 1.046610133, -1.417670912, 5.26519369, 12.92072764, 1.236832549, 7.28815347, 4.442151462, 6.507581336, 2.7373347, 10.23185144, 4.251607907, 8.252526362, 12.2296418, 7.727648046, 6.957529486, 2.270385112, 2.228321052, 2.1, 12.56954378, 11.32189098, 6.815416143, 9.733932976, 5.671362669, 8.006262058, 0.956724629, 4, 2.385862329, 6.551315837, 0.335236249, 10.77532964, -0.289915347, 5.084240004, 1.211145906, 8.925720492, 7.62358265, 15.02857003, 14.72879099, 9.422728243, 2.012316958, 13.13353224, 0.860864613, 9.022852277, 15.15296393, 5.543832408, 8.754386161, 10.03674266, -0.850630309, 6.301908082, 2.253706371, 2.888137548, 5.406757556, 3.567222227, 7.425726792, 11.55201542, 9.623278359, 8.40740568, 6.997053501, 12.43925892, 11.51796484, 13.92534001, 6.929581372, 9.966233374, 7.080402655, 3.082470187, 5.27813739, 3.666645406, -1.365203491, 9.652922188, 8.792504375, -1.314577417, 3.747794473, 8.892983975, 7.411229573, 13.67699027, 6.342895074, 11.1423346, -1.528702227, 15.01033966, 4.762606668, 3.968271388, 0.746304848, -2.850630374, 5.482077647, 6.861380759, 0.882724047, 5.676455692, 3.515691926, 11.98901148, 6.387057704, 12.66399132, 0.303175039, 10.01160024, 12.83977153, 8.012704231, 11.1322831, 2.423631372, 1.245294128, 3.029565441, 9.850806142, 6.823915107, 9.272100663, 11.81785032, 3.699346855, -0.815006398, 6.075369132, 8.198877964],
+    "mutant_pesticide_24h_1" :[5.935604875, -19.44356959, 0.227218025, -1.683514639, 4.834390917, 12.83297581, 0.479984096, 6.608346733, 4.170481011, 6.404160351, 3.244381818, 9.650624543, 4.177448162, 8.283826918, 11.91788011, 7.796669688, 8.318625277, 1.911033913, 1.733325106, 0.272542016, 12.50536161, 11.40048982, 6.717023293, 9.507569261, 5, 7.958103642, 0.427516676, 3, 2.386874692, 6.512029823, 0.16448227, 10.36842838, -0.803808871, 4.893007502, 1, 8.860754354, 7.32737707, 14.74972, 14.46647455, 9.802395155, 0.822376293, 12.96993507, 0.386874691, 9.051973694, 14.93660665, 5.336631937, 8.470240043, 9.46376662, -0.654945485, 6, 2.476760195, 2.741407452, 5.247222701, 3.343285423, 7.43366091, 11.10456743, 8.778660411, 7.909988536, 7.39948593, 12.47118008, 11.08993781, 12.67857439, 6.849114021, 9.642487822, 5.271612145, 3.522816012, 4.967249923, 3.810900974, -1.803808873, 9.553910458, 7.918033325, -1.572483326, 1.257591674, 8.368129359, 7.21227268, 13.51534167, 5.82554775, 10.80611259, -2.005442734, 14.31177642, 4.364372693, 3.794162691, 0.967249923, -3.520015914, 4.798042645, 6.701053287, 0.591492411, 5.543379177, 3.049839704, 11.83342141, 5.690133575, 12.77170726, 0.030181178, 9.878804119, 12.61556456, 7.464199086, 10.6200264, 2.341514158, 1.505519188, 1.352109273, 9.543812499, 6.172724124, 9.170855105, 11.5002758, 2.978690863, -1.005442733, 5.963511997, 7.932445983]
+}
+
+df2 = pd.DataFrame(data2)
+print(df2.head())
+
+# Save locally if needed
+df2.to_csv("Botany.csv", index=False)
+
+
+# Step 2: Calculate the difference in metabolic response (ΔM) between the DMSO treatment from the 24 hours treatment for the wild type and mutants
+
+
+# Load the data
+df = pd.read_csv('Botany.csv')
+
+# Calculate ΔM for Wild Type (24h - DMSO)
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+
+# Calculate ΔM for Mutant (24h - DMSO)
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+
+# Create a new dataframe with just the metabolites and ΔM values
+delta_df = df[['metabolites', 'WT_Delta_M', 'Mutant_Delta_M']].copy()
+
+# Display the first few rows
+print(delta_df.head())
+
+# Optional: Save to CSV
+delta_df.to_csv('metabolic_response_differences.csv', index=False)
+
+
+# Step 3: Generate a scatter plot showing the difference for ΔM for WT and Mutants
+
+# Load the data
+df = pd.read_csv('Botany.csv')
+
+# Calculate ΔM values
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+
+# Create the scatter plot
+plt.figure(figsize=(10, 8))
+sns.set_style("whitegrid")
+
+# Plot the y=x reference line
+max_val = max(df['WT_Delta_M'].abs().max(), df['Mutant_Delta_M'].abs().max()) + 0.5
+x = np.linspace(-max_val, max_val, 100)
+plt.plot(x, x, '--', color='gray', alpha=0.7, label='y = x (Equal response)')
+
+# Create the scatter plot
+scatter = sns.scatterplot(data=df, x='WT_Delta_M', y='Mutant_Delta_M', 
+                          s=100, alpha=0.7, color='royalblue')
+
+# Add labels and title
+plt.xlabel('Wild Type ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.ylabel('Mutant ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.title('Comparison of Metabolic Response Differences\nBetween Wild Type and Mutant', fontsize=14, pad=20)
+
+# Add zero lines
+plt.axhline(0, color='black', linestyle='-', linewidth=0.5, alpha=0.5)
+plt.axvline(0, color='black', linestyle='-', linewidth=0.5, alpha=0.5)
+
+# Set equal axes and limits
+plt.xlim(-max_val, max_val)
+plt.ylim(-max_val, max_val)
+plt.gca().set_aspect('equal', adjustable='box')
+
+# Add annotations for quadrants
+plt.text(0.9*max_val, 0.9*max_val, 'Both Increased', ha='right', va='top')
+plt.text(0.9*max_val, -0.9*max_val, 'WT ↑ Mutant ↓', ha='right', va='bottom')
+plt.text(-0.9*max_val, 0.9*max_val, 'WT ↓ Mutant ↑', ha='left', va='top')
+plt.text(-0.9*max_val, -0.9*max_val, 'Both Decreased', ha='left', va='bottom')
+
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# Step4: Fit a line that satifies a y-intercept of 0 and a slope of 1
+
+# Load the data
+df = pd.read_csv('Botany.csv')
+
+# Calculate ΔM values
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+
+# Create the scatter plot
+plt.figure(figsize=(10, 8))
+sns.set_style("whitegrid")
+
+# Plot the y=x reference line
+max_val = max(df['WT_Delta_M'].abs().max(), df['Mutant_Delta_M'].abs().max()) + 0.5
+x = np.linspace(-max_val, max_val, 100)
+plt.plot(x, x, '--', color='gray', alpha=0.7, label='y = x (Equal response)')
+
+# Create the scatter plot
+scatter = sns.scatterplot(data=df, x='WT_Delta_M', y='Mutant_Delta_M', 
+                          s=100, alpha=0.7, color='royalblue')
+
+# Add labels and title
+plt.xlabel('Wild Type ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.ylabel('Mutant ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.title('Comparison of Metabolic Response Differences\nBetween Wild Type and Mutant', fontsize=14, pad=20)
+
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# Step5: Using a residual cut off of your choice (calculated a the difference between the fitted line and each point) calculate the residual of each point on the scatter plot
+
+
+# Load the data
+df = pd.read_csv('Botany.csv')
+
+# Calculate ΔM values
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+
+# Calculate residuals (vertical distance from y=x line)
+df['residual'] = df['Mutant_Delta_M'] - df['WT_Delta_M']
+
+# Set residual cutoff (you can adjust this value)
+residual_cutoff = 0.5  # This is our threshold for "significant" deviation
+
+# Classify points based on cutoff
+df['deviation_type'] = np.where(
+    abs(df['residual']) > residual_cutoff,
+    'Significant',
+    'Non-significant'
+)
+
+# Add direction of deviation
+df['direction'] = np.where(
+    df['residual'] > 0,
+    'Mutant > WT',
+    'Mutant < WT'
+)
+
+# Show summary statistics
+print(f"Residual Statistics (Cutoff = ±{residual_cutoff})")
+print("----------------------------------")
+print(f"Mean residual: {df['residual'].mean():.3f}")
+print(f"Median residual: {df['residual'].median():.3f}")
+print(f"Minimum residual: {df['residual'].min():.3f}")
+print(f"Maximum residual: {df['residual'].max():.3f}")
+print(f"\nPoints with significant deviation: {sum(abs(df['residual']) > residual_cutoff)}/{len(df)}")
+
+# Show metabolites with largest deviations
+print("\nTop 5 metabolites with largest positive residuals (Mutant > WT):")
+print(df.nlargest(5, 'residual')[['metabolites', 'residual']].to_string(index=False))
+
+print("\nTop 5 metabolites with largest negative residuals (Mutant < WT):")
+print(df.nsmallest(5, 'residual')[['metabolites', 'residual']].to_string(index=False))
+
+# Optional: Save results to CSV
+df[['metabolites', 'WT_Delta_M', 'Mutant_Delta_M', 'residual', 'deviation_type', 'direction']]\
+  .to_csv('metabolic_residuals_analysis.csv', index=False)
+
+# Step6: Color metabolites that fall within +/- n of your residual grey. For example, if you have a cut-off of 0.3, color residual values that are within -0.3 and +0.3 grey
+
+# Load and prepare data
+df = pd.read_csv('Botany.csv')
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+df['residual'] = df['Mutant_Delta_M'] - df['WT_Delta_M']
+
+# Set parameters
+residual_cutoff = 0.5  # Adjustable cutoff value (n)
+color_within = 'grey'   # Color for points within cutoff
+color_outside = 'salmon' # Color for points outside cutoff
+
+# Create figure
+plt.figure(figsize=(10, 8))
+sns.set_style("whitegrid")
+
+# 1. Plot the reference line (y = x)
+max_val = max(df['WT_Delta_M'].abs().max(), df['Mutant_Delta_M'].abs().max()) + 0.5
+x = np.linspace(-max_val, max_val, 100)
+plt.plot(x, x, '--', color='black', alpha=0.5, label='y = x (reference)')
+
+# 2. Plot points with conditional coloring
+for idx, row in df.iterrows():
+    if abs(row['residual']) <= residual_cutoff:
+        plt.scatter(row['WT_Delta_M'], row['Mutant_Delta_M'], 
+                   color=color_within, s=100, alpha=0.7, label='Within cutoff' if idx == 0 else "")
+    else:
+        plt.scatter(row['WT_Delta_M'], row['Mutant_Delta_M'], 
+                   color=color_outside, s=100, alpha=0.7, label='Outside cutoff' if idx == 0 else "")
+
+# 3. Add cutoff boundaries (visual guides)
+plt.fill_between(x, x - residual_cutoff, x + residual_cutoff, 
+                 color='gray', alpha=0.1, label=f'±{residual_cutoff} cutoff band')
+
+# 4. Customize plot
+plt.xlabel('Wild Type ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.ylabel('Mutant ΔM (24h Pesticide - DMSO)', fontsize=12)
+plt.title(f'Metabolic Response Differences\n(Grey: |residual| ≤ {residual_cutoff}, Salmon: |residual| > {residual_cutoff})', fontsize=14)
+plt.axhline(0, color='black', linewidth=0.5, alpha=0.3)
+plt.axvline(0, color='black', linewidth=0.5, alpha=0.3)
+plt.xlim(-max_val, max_val)
+plt.ylim(-max_val, max_val)
+plt.gca().set_aspect('equal')
+
+# 5. Improve legend handling
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))  # Remove duplicate labels
+plt.legend(by_label.values(), by_label.keys())
+
+plt.tight_layout()
+plt.show()
+
+# step7: Color metabolites that fall outside this range salmon
+
+# Set parameters
+residual_cutoff = 0.5  # Our threshold value (n)
+base_color = 'grey'     # Default color
+highlight_color = 'salmon' # Color for significant points
+
+# Create figure
+plt.figure(figsize=(10, 8))
+sns.set_style("whitegrid")
+
+# 1. Plot all points first in base color
+plt.scatter(df['WT_Delta_M'], df['Mutant_Delta_M'], 
+           color=base_color, s=100, alpha=0.5, label='Within cutoff')
+
+# 2. Overlay significant points in salmon
+significant = df[abs(df['residual']) > residual_cutoff]
+plt.scatter(significant['WT_Delta_M'], significant['Mutant_Delta_M'], 
+           color=highlight_color, s=100, alpha=0.8, label='Outside cutoff')
+
+# 3. Add reference line (y = x)
+max_val = max(df['WT_Delta_M'].abs().max(), df['Mutant_Delta_M'].abs().max()) + 0.5
+x = np.linspace(-max_val, max_val, 100)
+plt.plot(x, x, '--', color='black', alpha=0.3, label='y = x')
+
+# 4. Add plot decorations
+plt.xlabel('Wild Type ΔM', fontsize=12)
+plt.ylabel('Mutant ΔM', fontsize=12)
+plt.title(f'Metabolic Responses (Salmon: |ΔMutant - ΔWT| > {residual_cutoff})', fontsize=14)
+plt.axhline(0, color='black', linewidth=0.5, alpha=0.3)
+plt.axvline(0, color='black', linewidth=0.5, alpha=0.3)
+plt.xlim(-max_val, max_val)
+plt.ylim(-max_val, max_val)
+plt.gca().set_aspect('equal')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Show the significant metabolites
+print(f"Metabolites with |residual| > {residual_cutoff}:")
+print(significant[['metabolites', 'residual']].sort_values('residual', key=abs, ascending=False))
+
+# Step8: What are these metabolites. How do you explain the trends you see on either direction of the plot?
+
+# Load the data and calculate residuals (as in previous steps)
+df = pd.read_csv('Botany.csv')
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+df['residual'] = df['Mutant_Delta_M'] - df['WT_Delta_M']
+
+# Filter and sort metabolites with |residual| > 0.5
+significant_metabolites = df[abs(df['residual']) > 0.5][['metabolites', 'residual']]\
+                          .sort_values('residual', key=abs, ascending=False)
+
+print("Metabolites outside ±0.5 residual cutoff (salmon points):")
+print(significant_metabolites.to_string(index=False))
+
+# Step9: Pick any 6 metabolites that fall outside this range and generate a line plot that spans from their 0h treatment to their 8h and 24hr.
+
+# Present the metabolites with full name
+
+# Load data and set metabolites as the index
+df = pd.read_csv('Botany.csv').set_index('metabolites')
+
+# Calculate ΔM
+df['WT_Delta_M'] = df['WT_pesticide_24h_1'] - df['WT_DMSO_1']
+df['Mutant_Delta_M'] = df['mutant_pesticide_24h_1'] - df['mutant_DMSO_1']
+
+# Include metabolites in delta_df
+delta_df = df[['WT_Delta_M', 'Mutant_Delta_M']].dropna()
+
+# Calculate residuals and filter outliers
+delta_df['residual'] = delta_df['Mutant_Delta_M'] - delta_df['WT_Delta_M']
+cutoff = 0.5
+outliers = delta_df[delta_df['residual'].abs() > cutoff]
+
+# Print metabolite NAMES (index labels)
+print("Metabolites with Residuals > ±0.5:\n", outliers.index.tolist())
+
+# Step10:Pick any 6 metabolites that fall outside this range and generate a line plot that spans from their 0h treatment to their 8h and 24hr
+
+# generate line plots for 6 selected metabolites that fall outside the residual cutoff (±0.5),
+# showing their time-course responses (0h, 8h, 24h pesticide treatment) for both WT and mutants:
+
+# Load data and set metabolites as the index
+df = pd.read_csv('Botany.csv').set_index('metabolites')
+
+# Selected metabolites (outliers)
+selected_metabolites = [
+    'citrulline',
+    'deoxyadenosine_triphosphate',
+    'n_acetylglutamic_acid',
+    'taurocholic_acid',
+    'pyridoxic_acid',
+    'xanthosine'
+]
+
+# Generate line plots for each metabolite
+for metabolite in selected_metabolites:
+    # Extract time-course data
+    wt_data = df.loc[metabolite, [
+        'WT_DMSO_1', 
+        'WT_pesticide_0_1', 
+        'WT_pesticide_8h_1', 
+        'WT_pesticide_24h_1'
+    ]]
+    
+    mutant_data = df.loc[metabolite, [
+        'mutant_DMSO_1', 
+        'mutant_pesticide_0_1', 
+        'mutant_pesticide_8h_1', 
+        'mutant_pesticide_24h_1'
+    ]]
+    
+    # Plot
+    plt.figure(figsize=(8, 4))
+    plt.plot(
+        ['DMSO', '0h', '8h', '24h'], 
+        wt_data.values, 
+        marker='o', 
+        label='WT', 
+        color='#1f77b4'
+    )
+    plt.plot(
+        ['DMSO', '0h', '8h', '24h'], 
+        mutant_data.values, 
+        marker='o', 
+        label='Mutant', 
+        color='#ff7f0e'
+    )
+    plt.title(f'{metabolite} Time-Course Response', fontsize=14)
+    plt.xlabel('Treatment Time', fontsize=12)
+    plt.ylabel('Metabolite Level', fontsize=12)
+    plt.legend()
+    plt.grid(alpha=0.2)
+    plt.tight_layout()
+    plt.show()
+
+
+# Task code 2.7: 
+
+# Public Health
+# NHANES is a program run by the CDC to assess the health and nutritional status of adults and children in the US.
+#  It combines survey questions and physical examinations, including medical and physiological measurements and laboratory tests, and examines a representative sample of about 5,000 people each year. 
+# The data is used to determine the prevalence of diseases and risk factors, establish national standards, and support epidemiology studies and health sciences research. 
+# This information helps to develop public health policy, design health programs and services, and expand the nation's health knowledge.
+# https://raw.githubusercontent.com/HackBio-Internship/public_datasets/main/R/nhanes.csv
+
+# Solution
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Import datasets
+
+# URLs for dataset and data dictionary
+dataset_url = "https://raw.githubusercontent.com/HackBio-Internship/public_datasets/main/R/nhanes.csv"
+data_dict_url = "https://raw.githubusercontent.com/HackBio-Internship/public_datasets/main/R/nhanes_dd.csv"
+
+# Load dataset and data dictionary
+df = pd.read_csv(dataset_url)  # load Url1
+data_dict = pd.read_csv(data_dict_url)  # Load Url2
+
+# Display first few rows
+print("Dataset Sample:")
+print(df.head())
+
+print("\nData Dictionary Sample:")
+print(data_dict.head())
+
+# Check column names in both files
+print("\nDataset Columns:", df.columns.tolist())
+print("\nData Dictionary Columns:", data_dict.columns.tolist())
+
+# Assuming the data dictionary contains variable names and descriptions
+# We will merge them based on the column name
+if "Variable Name" in data_dict.columns and "Description" in data_dict.columns:
+    variable_info = data_dict[["Variable Name", "Description"]]
+
+    # Display a preview of variable information
+    print("\nVariable Information Sample:")
+    print(variable_info.head())
+else:
+    print("Check the column names in the data dictionary!")
+
+# Save locally if needed
+df.to_csv("nhanes_data.csv", index=False)
+data_dict.to_csv("nhanes_data_dict.csv", index=False)
+
+# The first step was to load and inspect the files.
+
+# 2. Identify Missisng Values and Handle it
+
+# The dataset likely contains missing values (NA/NaN), which we need to handle before analysis.
+# Let's first check how many missing values each column has.
+
+# Load the dataset (assuming you saved it as "nhanes_data.csv")
+df = pd.read_csv("nhanes_data.csv")
+
+# Check the total number of missing values per column
+missing_values = df.isnull().sum()
+
+# Show only columns with missing values
+missing_values = missing_values[missing_values > 0]
+print("Missing Values in Dataset:\n", missing_values)
+
+# 3. Remove rows with missing Values
+
+# Load your dataset
+df = pd.read_csv("nhanes_data.csv")
+
+# Replace empty strings or spaces with NaN
+df.replace(r"^\s*$", np.nan, regex=True, inplace=True)
+
+# Drop rows with any NaN values
+df_cleaned_rows = df.dropna(axis=0, how="any")
+
+# Save the cleaned dataset (make sure you are saving df_cleaned_rows, not df)
+df_cleaned_rows.to_csv(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/cleaned_data.csv",
+    index=False,
+)
+
+print("Cleaning Complete!")
+
+# 4. Visulise the distribution of BMI,
+
+# to do 4 differents graphs
+
+# Load the cleaned dataset
+df = pd.read_csv(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/cleaned_data.csv"
+)
+
+# Create Weight in Pounds column (Weight in kg * 2.2)
+df["Weight in Pounds"] = df["Weight"] * 2.2
+
+# Plot and save BMI distribution
+plt.figure(figsize=(8, 6))
+sns.histplot(df["BMI"], kde=True, color="skyblue", bins=20)
+plt.title("Distribution of BMI", fontsize=14)
+plt.xlabel("BMI", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.tight_layout()
+plt.savefig(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/BMI_distribution.png"
+)
+plt.close()  # Close the figure to avoid overlapping with next plots
+
+# Plot and save Weight (kg) distribution
+plt.figure(figsize=(8, 6))
+sns.histplot(df["Weight"], kde=True, color="green", bins=20)
+plt.title("Distribution of Weight (kg)", fontsize=14)
+plt.xlabel("Weight (kg)", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.tight_layout()
+plt.savefig(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/Weight_distribution.png"
+)
+plt.close()
+
+# Plot and save Weight in Pounds distribution
+plt.figure(figsize=(8, 6))
+sns.histplot(df["Weight in Pounds"], kde=True, color="orange", bins=20)
+plt.title("Distribution of Weight (lbs)", fontsize=14)
+plt.xlabel("Weight (lbs)", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.tight_layout()
+plt.savefig(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/Weight_in_pounds_distribution.png"
+)
+plt.close()
+
+# Plot and save Age distribution
+plt.figure(figsize=(8, 6))
+sns.histplot(df["Age"], kde=True, color="red", bins=20)
+plt.title("Distribution of Age", fontsize=14)
+plt.xlabel("Age", fontsize=12)
+plt.ylabel("Frequency", fontsize=12)
+plt.tight_layout()
+plt.savefig(
+    "D:/disque dur/HackBio Intership/python/stage 2/exercices/Task 2.7/Data/Age_distribution.png"
+)
+plt.close()
+
+print("4 separate graphs have been saved successfully!")
+
+# 5- Determine the mean 60-second pulse rate for all participants in the data
+
+# Replace any empty strings with NaN and then drop rows with NaN values in the pulse rate column (if necessary)
+# Assuming the column is named 'PulseRate' (adjust the column name accordingly)
+pulse_rate_column = "Pulse"  # Replace with the actual column name for 60-second pulse rate in your dataset
+
+# Calculate the mean of the pulse rate
+mean_pulse_rate = df[pulse_rate_column].mean()
+# df[Pulse].mean()
+
+# Print the result
+print(f"The mean 60-second pulse rate for all participants is: {mean_pulse_rate}")
+
+# 6- Determine the range of values for diastolic blood pressure in all participants? (Hint: see help for min(), max())
+
+# Replace any empty strings with NaN and then drop rows with NaN values in the diastolic blood pressure column (if necessary)
+diastolic_bp_column = "BPDia"
+
+# Calculate the range of diastolic blood pressure (max - min)
+min_diastolic_bp = df[diastolic_bp_column].min()
+max_diastolic_bp = df[diastolic_bp_column].max()
+range_diastolic_bp = max_diastolic_bp - min_diastolic_bp
+
+# Print the result
+print(min_diastolic_bp)
+print(max_diastolic_bp)
+print(
+    f"The range of diastolic blood pressure for all participants is: {range_diastolic_bp}"
+)
+
+# 7- Determine the he variance and standard deviation for income among all participants
+
+income_column = "Income"
+
+# Calculate variance and standard deviation for income
+income_variance = df[income_column].var()
+income_std_dev = df[income_column].std()
+
+# Print the results
+print(f"The variance for income among all participants is: {income_variance}")
+print(f"The standard deviation for income among all participants is: {income_std_dev}")
+
+## non need to reload the dataset or the pandas library
+
+print(df["Income"].var())
+print(df["Income"].std())
+print(df["Pulse"].mean())
+
+# 8- Visualize the relationship between weight and height
+
+weight_column = "Weight"
+height_column = "Height"
+
+# Create a scatter plot
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=df[height_column], y=df[weight_column], color="blue", alpha=0.6)
+
+# Add title and labels
+plt.title("Relationship Between Weight and Height", fontsize=14)
+plt.xlabel("Height", fontsize=12)
+plt.ylabel("Weight", fontsize=12)
+plt.grid(True)
+
+# Show the plot
+plt.show()
+
+# 9- color the points by gender
+
+# Create a scatter plot without using extra variables
+plt.figure(figsize=(8, 6))
+sns.scatterplot(
+    x=df["Height"], y=df["Weight"], hue=df["Gender"], alpha=0.7, palette="coolwarm"
+)
+
+# Add title and labels
+plt.title("Relationship Between Weight and Height (Colored by Gender)", fontsize=14)
+plt.xlabel("Height", fontsize=12)
+plt.ylabel("Weight", fontsize=12)
+plt.legend(title="Gender")
+plt.grid(True)
+
+# Show the plot
+plt.show()
+
+# 10- Color the Points by Diabetes
+
+# Create a scatter plot without using extra variables
+plt.figure(figsize=(8, 6))
+sns.scatterplot(
+    x=df["Height"], y=df["Weight"], hue=df["Diabetes"], alpha=0.7, palette="coolwarm"
+)
+
+# Add title and labels
+plt.title("Relationship Between Weight and Height (Colored by Gender)", fontsize=14)
+plt.xlabel("Height", fontsize=12)
+plt.ylabel("Weight", fontsize=12)
+plt.legend(title="Diabetes")
+plt.grid(True)
+
+# Show the plot
+plt.show()
+
+# 11- color points by smoking status
+
+# Create a scatter plot
+plt.figure(figsize=(8, 6))
+sns.scatterplot(
+    x=df["Height"],
+    y=df["Weight"],
+    hue="Smoking_Status",
+    data=df,
+    alpha=0.7,
+    palette="coolwarm",
+)
+
+# Add title and labels
+plt.title(
+    "Relationship Between Weight and Height (Colored by Smoking Status)", fontsize=14
+)
+plt.xlabel("Height", fontsize=12)
+plt.ylabel("Weight", fontsize=12)
+plt.legend(title="Smoking Status")
+plt.grid(True)
+
+# Show the plot
+plt.show()
+
+# 12- Conduct t-test between the following variables and make conclusions on the relationship between them based on P-Value
+
+# between Age and Gender
+
+# Ensure column names are correct
+df.rename(
+    columns={"Gender": "Gender", "Age": "Age"}, inplace=True
+)  # Optional, if spaces exist in column names
+
+# Separate age data by gender (assuming 'Gender' is coded as 'Male' and 'Female')
+age_male = df[df["Gender"] == "male"]["Age"]
+age_female = df[df["Gender"] == "female"]["Age"]
+
+# Perform independent t-test
+t_stat, p_value = ttest_ind(age_male, age_female, nan_policy="omit")
+
+# Print results
+print(f"T-statistic: {t_stat:.4f}")
+print(f"P-value: {p_value:.4f}")
+
+# Interpretation
+if p_value < 0.05:
+    print("Result: Statistically significant difference in age between genders.")
+else:
+    print("Result: No statistically significant difference in age between genders.")
+
+# between BMI and Diabetes
+
+# Separate age data by diabetes (assuming 'diabetes' is coded as 'Yes' and 'No')
+diabetes_yes = df[df["Diabetes"] == "Yes"]["BMI"]
+diabetes_no = df[df["Diabetes"] == "No"]["BMI"]
+
+# Perform independent t-test
+t_stat, p_value = ttest_ind(diabetes_yes, diabetes_no, nan_policy="omit")
+
+# Print results
+print(f"T-statistic: {t_stat:.4f}")
+print(f"P-value: {p_value:.4f}")
+
+# Interpretation
+if p_value < 0.05:
+    print("Result: Statistically significant difference in BMI between Diabetes.")
+else:
+    print("Result: No statistically significant difference in BMI between Diabetes.")
+
+# between Alcohol Year and Relationship Status
+
+# Ensure column names are correct
+df.rename(
+    columns={
+        "AlcoholYear": "Alcohol_Year",
+        "RelationshipStatus": "Relationship_Status",
+    },
+    inplace=True,
+)  # Optional, if spaces exist in column names
+
+
+# Separate age data by gender (assuming 'Gender' is coded as 'Male' and 'Female')
+Alcohol_single = df[df["Relationship_Status"] == "Single"]["Alcohol_Year"]
+Alcohol_committed = df[df["Relationship_Status"] == "Committed"]["Alcohol_Year"]
+
+# Perform independent t-test
+t_stat, p_value = ttest_ind(Alcohol_single, Alcohol_committed, nan_policy="omit")
+
+# Print results
+print(f"T-statistic: {t_stat:.4f}")
+print(f"P-value: {p_value:.4f}")
+
+# Interpretation
+if p_value < 0.05:
+    print(
+        "Result: Statistically significant difference in Alcohol Year between Relationship Status."
+    )
+else:
+    print(
+        "Result: No statistically significant difference in Alcohol Year between Relationship Status."
