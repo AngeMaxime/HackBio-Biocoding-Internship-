@@ -1,1 +1,168 @@
+# https://github.com/sakshimohta17/hackbio-biocoding-internship/blob/main/stage-0/Task1 : sakshi accounts
+# https://www.linkedin.com/in/sakshimohta1705 : Sakshi
+
+# https://github.com/AngeMaxime/HackBio-Biocoding-Internship- : Ange accounts
+# https://www.linkedin.com/in/%F0%9F%A7%ACtchoutang-ange-maxime-834b6729a
+
+# https://github.com/maero1 : Maero Olori Accounts
+# https://www.linkedin.com/in/maeroolori/
+
+# https://github.com/RajiAbdulrahaman
+# https://www.linkedin.com/authwall: Raji Accounts
+
+# https://github.com/Gooddy07 : Umunakwe Accounts
+# https://www.linkedin.com/in/goodness-umunakwe
+
+# Task: This script represent some fucntions
+
+# 1. Write a function to translate DNA into Protein
+
+def dna_to_protein(dna_sequence):
+    codon_table = {
+        'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
+        'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
+        'AAC': 'N', 'AAT': 'N', 'AAA': 'K', 'AAG': 'K',
+        'AGC': 'S', 'AGT': 'S', 'AGA': 'R', 'AGG': 'R',
+        'CTA': 'L', 'CTC': 'L', 'CTG': 'L', 'CTT': 'L',
+        'CCA': 'P', 'CCC': 'P', 'CCG': 'P', 'CCT': 'P',
+        'CAC': 'H', 'CAT': 'H', 'CAA': 'Q', 'CAG': 'Q',
+        'CGA': 'R', 'CGC': 'R', 'CGG': 'R', 'CGT': 'R',
+        'GTA': 'V', 'GTC': 'V', 'GTG': 'V', 'GTT': 'V',
+        'GCA': 'A', 'GCC': 'A', 'GCG': 'A', 'GCT': 'A',
+        'GAC': 'D', 'GAT': 'D', 'GAA': 'E', 'GAG': 'E',
+        'GGA': 'G', 'GGC': 'G', 'GGG': 'G', 'GGT': 'G',
+        'TCA': 'S', 'TCC': 'S', 'TCG': 'S', 'TCT': 'S',
+        'TTC': 'F', 'TTT': 'F', 'TTA': 'L', 'TTG': 'L',
+        'TAC': 'Y', 'TAT': 'Y', 'TAA': '*', 'TAG': '*', 'TGA': '*'
+    }
+    
+    protein = ""
+    for i in range(0, len(dna_sequence) - 2, 3):  # Read in triplets
+        codon = dna_sequence[i:i+3]
+        amino_acid = codon_table.get(codon, '?')  # '?' for unknown codons
+        protein += amino_acid
+        if amino_acid == '*':  # Stop translation at stop codon
+            break
+    
+    return protein
+
+# Example usage:
+dna_seq = "ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG"
+protein_seq = dna_to_protein(dna_seq)
+print(protein_seq)
+
+# 2. write a fucntion that simulates and generates a logistic population growth curve. 
+# Your function should include 2 extra parameters that randomize the length of the lag phase and the exponential phase [See population curve here] . 
+# Most living populations follow a logistic population growth. Therefore, your growth curve can be: Population Size vs Time, Cell density vs Time, OD vs Time, CFU vs Time, etc
+# Using your function, generate a dataframe with 100 different growth curves
+
+def logistic_growth(time, K=1000, P0=10, t_lag=10, r=0.2):
+    """
+    Simulates logistic population growth with a fixed lag phase and exponential phase.
+
+    Parameters:
+        time (list): Time points (integers).
+        K (int): Carrying capacity (maximum population).
+        P0 (int): Initial population.
+        t_lag (int): Fixed lag phase duration., here 10
+        r (float): Fixed growth rate., here 0.2
+
+    Returns:
+        population (list): Population size at each time step.
+    """
+    population = []
+    for t in time:
+        if t < t_lag:
+            pop = P0  # Population stays constant during the lag phase
+        else:
+            pop = K / (1 + ((K - P0) / P0) * (2.718 ** (-r * (t - t_lag))))  # Logistic equation
+        population.append(pop)
+    
+    return population
+
+# Generate 100 different growth curves (all identical)
+time_points = list(range(51))  # Time from 0 to 50
+growth_curves = []
+
+for i in range(100): # generate 100 identical growth curves
+    growth_data = {"Time": time_points}
+    growth_data[f"Growth_{i+1}"] = logistic_growth(time_points)
+    growth_curves.append(growth_data)
+
+# Print the first 5 time points of the first 3 curves
+for i in range(3):
+    print(f"Curve {i+1}:")
+    for t, p in zip(growth_curves[i]["Time"][:5], growth_curves[i][f"Growth_{i+1}"][:5]):
+        print(f"Time {t}: Population {p:.2f}")
+    print()
+
+# The population stays constant (10.00) for the first 10 time steps (lag phase).
+# After time = 10, the population increases exponentially.
+
+# 3. Write a function for determining the time to reach 80% of the maximum growth; usually the carrying capacity
+
+# Define exponential function manually
+def exp(x):
+    """Computes e^x using a series expansion."""
+    result = 1
+    term = 1
+    for n in range(1, 100):  # Approximate using 100 terms
+        term *= x / n
+        result += term
+    return result
+
+# Function to determine time to reach 80% of carrying capacity
+def time_to_80_percent(K, lag_phase, r, P0=1):
+    """Computes the time required to reach 80% of the carrying capacity."""
+    P_target = 0.8 * K  # 80% of carrying capacity
+
+    # Solve for t using rearranged equation:
+    # t = lag_phase + ( -ln( ((K / P_target) - 1) / ((K - P0) / P0) ) / r )
+    
+    numerator = (K / P_target) - 1
+    denominator = (K - P0) / P0
+    ratio = numerator / denominator
+    
+    # Compute natural log manually (ln(x) = integral of (1/t) dt)
+    ln_x = 0
+    if ratio > 0:  # Ensure valid log input
+        x = (ratio - 1) / (ratio + 1)
+        for n in range(1, 100, 2):  # Using logarithm series expansion
+            ln_x += (2 * (x**n)) / n
+
+    # Compute time
+    t_80 = lag_phase - (ln_x / r)
+    
+    return t_80
+
+# Example usage
+K = 1000  # Carrying capacity
+lag_phase = 10  # Lag phase duration
+r = 0.2  # Growth rate
+
+time_80 = time_to_80_percent(K, lag_phase, r)
+print("Time to reach 80% of carrying capacity:", round(time_80, 2))
+
+# 4.  Finally, write a function for calculating the hamming distance between your Slack username and twitter/X handle (synthesize if you don’t have one). 
+# Feel free to pad it with extra words if they are not of the same length.
+
+def hamming_distance(str1, str2):
+    """Computes the Hamming distance between two strings of different lengths by padding the shorter one."""
+    
+    # Ensure both strings are of equal length by padding the shorter one
+    max_length = max(len(str1), len(str2))
+    str1 = str1.ljust(max_length, "_")  # Pad with "_" if shorter
+    str2 = str2.ljust(max_length, "_")
+    
+    # Compute Hamming distance
+    distance = sum(1 for c1, c2 in zip(str1, str2) if c1 != c2)
+    
+    return distance
+
+# Example usage with "Ange" (Slack username) and "Maxi" (Twitter/X handle)
+slack_username = "Ange"
+twitter_handle = "Maxi"
+
+distance = hamming_distance(slack_username, twitter_handle)
+print(f"Hamming Distance between '{slack_username}' and '{twitter_handle}':", distance)
 
